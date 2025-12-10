@@ -1,10 +1,13 @@
 package com.vodokanal.accounting.service;
 
 import com.vodokanal.accounting.dto.AccountDto;
+import com.vodokanal.accounting.dto.AccountUpdateDto;
 import com.vodokanal.accounting.entity.AccountEntity;
 import com.vodokanal.accounting.util.DatabaseRepository;
 import com.vodokanal.accounting.util.MappingUtil;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class AccountService {
@@ -16,11 +19,20 @@ public class AccountService {
         this.mappingUtil = mappingUtil;
     }
 
-    public AccountDto addAccount(AccountDto accountDto) {
-        AccountEntity accountEntity = mappingUtil.mapAccountDtoEntity(accountDto);
-        accountEntity = databaseRepository.addAccount(accountEntity);
+    public List<AccountDto> addAccount(List<AccountDto> accountDtoList) {
+        List<AccountEntity> accountEntityList = accountDtoList.stream()
+                .map(mappingUtil::mapAccountDtoEntity)
+                .toList();
 
-        return mappingUtil.mapAccountEntityDto(accountEntity);
+        accountEntityList = databaseRepository.addAccount(accountEntityList);
+
+        return accountEntityList.stream()
+                .map(mappingUtil::mapAccountEntityDto)
+                .toList();
+    }
+
+    public AccountDto updateAccount(long id, AccountUpdateDto accountUpdateDto) {
+        return databaseRepository.updateAccount(id, accountUpdateDto);
     }
 }
 

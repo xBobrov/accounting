@@ -11,12 +11,22 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @ControllerAdvice
 public class ExceptionHandlerUtil {
 
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorResponseDto> handleNoSuchElementException(NoSuchElementException e){
+
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
+                "Bad Request", e.getMessage());
+
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponseDto> handConstraintViolationException(ConstraintViolationException e){
+    public ResponseEntity<ErrorResponseDto> handleConstraintViolationException(ConstraintViolationException e){
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
                 "Bad Request", e.getMessage());

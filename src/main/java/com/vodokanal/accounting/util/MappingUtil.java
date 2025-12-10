@@ -1,6 +1,7 @@
 package com.vodokanal.accounting.util;
 
 import com.vodokanal.accounting.dto.AccountDto;
+import com.vodokanal.accounting.dto.AccountUpdateDto;
 import com.vodokanal.accounting.entity.AccountEntity;
 import org.springframework.stereotype.Service;
 
@@ -27,5 +28,10 @@ public class MappingUtil {
                 accountEntity.getAddress(),
                 accountEntity.getPayer()
         );
+    }
+
+    public AccountEntity mapAccountUpdate(AccountUpdateDto accountUpdateDto, AccountEntity accountEntity) {
+        accountEntity.setPayer(accountUpdateDto.payer());
+        return accountEntity;
     }
 }
