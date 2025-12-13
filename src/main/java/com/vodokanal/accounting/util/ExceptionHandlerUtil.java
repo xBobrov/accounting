@@ -25,7 +25,7 @@ public class ExceptionHandlerUtil {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
                 "Bad Request", e.getMessage());
-        log.error("В процессе обработки произошла непредвиденная ошибка", e);
+        log.error("При записи в базу данных произошла ошибка: {}", e.getMessage());
 
         return new ResponseEntity<>(errorResponseDto, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -35,7 +35,7 @@ public class ExceptionHandlerUtil {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
                 "Bad Request", e.getMessage());
-        log.error("При записи в базу данных произошла ошибка", e);
+        log.error("При записи в базу данных произошла ошибка: {}", e.getMessage());
 
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
@@ -45,7 +45,7 @@ public class ExceptionHandlerUtil {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
                 "Bad Request", e.getMessage());
-        log.error("При записи в базу данных произошла ошибка", e);
+        log.error("При записи в базу данных произошла ошибка: {}", e.getMessage());
 
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
@@ -55,7 +55,7 @@ public class ExceptionHandlerUtil {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
                 "Bad Request", "В переданном списке содержаться ошибки");
-        log.error("При записи в базу данных произошла ошибка", e);
+        log.error("При записи в базу данных произошла ошибка: {}", e.getMessage());
 
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
@@ -65,7 +65,7 @@ public class ExceptionHandlerUtil {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
                 "Bad Request", getErrorMessageList(e).toString());
-        log.error("При записи в базу данных произошла ошибка", e);
+        log.error("При записи в базу данных произошла ошибка: {}", e.getMessage());
 
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }

@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 
 public record AccountUpdateDto(
         @NotBlank(message = "Не указан плательщик")
-        String payer
+        String payer,
+
+        boolean isActive
 ) {
 }

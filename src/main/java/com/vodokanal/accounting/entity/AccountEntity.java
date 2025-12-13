@@ -1,7 +1,5 @@
 package com.vodokanal.accounting.entity;
 
-import com.vodokanal.accounting.model.Charge;
-import com.vodokanal.accounting.model.Meter;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -28,8 +26,8 @@ public class AccountEntity {
     @Column(name = "email")
     private String email;
 
-    @Column(name = "active", columnDefinition = "BOOLEAN DEFAULT TRUE")
-    private boolean active;
+    @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean isActive;
 
     @Column(name = "telegram")
     private String telegram;
@@ -38,14 +36,14 @@ public class AccountEntity {
             columnDefinition = "DECIMAL(10, 2) DEFAULT 0.0")
     private BigDecimal balance;
 
-    @OneToMany(mappedBy = "account")
-    private List<Meter> meters;
+//    @OneToMany(mappedBy = "account")
+//    private List<Meter> meters;
 
-    @OneToMany(mappedBy = "account")
-    private List<Charge> charges;
+//    @OneToMany(mappedBy = "account")
+//    private List<Charge> charges;
 
     public AccountEntity() {
-        this.active = true;
+        this.isActive = true;
         this.balance = BigDecimal.valueOf(0.0);
     }
 
@@ -69,8 +67,8 @@ public class AccountEntity {
         return email;
     }
 
-    public boolean isActive() {
-        return active;
+    public boolean getIsActive() {
+        return isActive;
     }
 
     public String getTelegram() {
@@ -97,8 +95,8 @@ public class AccountEntity {
         this.email = email;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setIsActive(boolean active) {
+        this.isActive = active;
     }
 
     public void setTelegram(String telegram) {

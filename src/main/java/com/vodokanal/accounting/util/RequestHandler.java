@@ -2,7 +2,9 @@ package com.vodokanal.accounting.util;
 
 import com.vodokanal.accounting.dto.AccountDto;
 import com.vodokanal.accounting.dto.AccountUpdateDto;
+import com.vodokanal.accounting.dto.TariffDto;
 import com.vodokanal.accounting.service.AccountService;
+import com.vodokanal.accounting.service.TariffService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,15 +13,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 public class RequestHandler {
     private final AccountService accountService;
+    private final TariffService tariffService;
+
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
 
-    public RequestHandler(AccountService accountService) {
+    public RequestHandler(AccountService accountService, TariffService tariffService) {
         this.accountService = accountService;
+        this.tariffService = tariffService;
     }
 
     @PostMapping("/account/add/list")
@@ -41,11 +47,23 @@ public class RequestHandler {
     }
 
     @PatchMapping("/account/update/{id}")
-    public ResponseEntity<AccountDto> updateAccount(@PathVariable long id,
-                                                       @RequestBody @Valid AccountUpdateDto accountUpdateDto) {
+    public ResponseEntity<AccountUpdateDto> updateAccount(@PathVariable long id,
+                                                          @RequestBody @Valid AccountUpdateDto accountUpdateDto) {
         log.info("Вызван метод updateAccount с телом запроса: {}", accountUpdateDto);
 
         return ResponseEntity.status(HttpStatus.OK).body(accountService.updateAccount(id, accountUpdateDto));
+    }
+
+    @PostMapping("/tariff/add")
+    public ResponseEntity<TariffDto> addTariff(@RequestBody TariffDto tariffDto) {
+        log.info("Вызван метод addTariff с телом запроса: {}", tariffDto);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(tariffService.addTariff(tariffDto));
+    }
+
+    @GetMapping
+    public LocalDate test(){
+        return LocalDate.now();
     }
 
 }

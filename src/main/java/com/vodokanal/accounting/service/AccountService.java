@@ -31,7 +31,7 @@ public class AccountService {
                 .toList();
     }
 
-    public AccountDto updateAccount(long id, AccountUpdateDto accountUpdateDto) {
+    public AccountUpdateDto updateAccount(long id, AccountUpdateDto accountUpdateDto) {
         return databaseRepository.updateAccount(id, accountUpdateDto);
     }
 }
