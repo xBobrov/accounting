@@ -1,8 +1,8 @@
 package com.vodokanal.accounting.util;
 
-import com.vodokanal.accounting.dto.AccountDto;
-import com.vodokanal.accounting.dto.AccountUpdateDto;
-import com.vodokanal.accounting.dto.TariffDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vodokanal.accounting.dto.*;
 import com.vodokanal.accounting.entity.AccountEntity;
 import com.vodokanal.accounting.entity.ServiceEntity;
 import com.vodokanal.accounting.entity.TariffEntity;
@@ -10,9 +10,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MappingUtil {
+    private final ObjectMapper objectMapper;
+
+    public MappingUtil(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     // dto to entity
-    public AccountEntity mapAccountDtoEntity(AccountDto accountDto) {
+    public AccountEntity mapAccountDtoToEntity(AccountDto accountDto) {
         AccountEntity accountEntity = new AccountEntity();
 
         accountEntity.setNumber(accountDto.number());
@@ -23,7 +28,7 @@ public class MappingUtil {
     }
 
     // entity to dto
-    public AccountDto mapAccountEntityDto(AccountEntity accountEntity) {
+    public AccountDto mapAccountEntityToDto(AccountEntity accountEntity) {
 
         return new AccountDto(
                 accountEntity.getId(),
@@ -33,14 +38,14 @@ public class MappingUtil {
         );
     }
 
-    public AccountEntity mapAccountUpdate(AccountUpdateDto accountUpdateDto, AccountEntity accountEntity) {
+    public AccountEntity mapAccountToUpdate(AccountUpdateDto accountUpdateDto, AccountEntity accountEntity) {
         accountEntity.setPayer(accountUpdateDto.payer());
         accountEntity.setIsActive(accountUpdateDto.isActive());
 
         return accountEntity;
     }
 
-    public TariffEntity mapTariffDtoEntity(TariffDto tariffDto, ServiceEntity serviceEntity) {
+    public TariffEntity mapTariffDtoToEntity(TariffDto tariffDto, ServiceEntity serviceEntity) {
         TariffEntity tariffEntity = new TariffEntity();
         tariffEntity.setService(serviceEntity);
         tariffEntity.setImplementationDate(tariffDto.implementationDate());
@@ -49,7 +54,7 @@ public class MappingUtil {
         return tariffEntity;
     }
 
-    public TariffDto mapTariffEntityDto(TariffEntity tariffEntity) {
+    public TariffDto mapTariffEntityToDto(TariffEntity tariffEntity) {
 
         return new TariffDto(
                 tariffEntity.getId(),
@@ -57,5 +62,21 @@ public class MappingUtil {
                 tariffEntity.getImplementationDate(),
                 tariffEntity.getRate()
         );
+    }
+
+    public CustomerBotRequestDto mapJsonToRequestDto(String requestJson) {
+        try {
+            return objectMapper.readValue(requestJson, CustomerBotRequestDto.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String mapResponseDtoToJson(CustomerBotResponseDto responseDto) {
+        try {
+            return  objectMapper.writeValueAsString(responseDto);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

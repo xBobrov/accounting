@@ -21,18 +21,26 @@ public class AccountService {
 
     public List<AccountDto> addAccount(List<AccountDto> accountDtoList) {
         List<AccountEntity> accountEntityList = accountDtoList.stream()
-                .map(mappingUtil::mapAccountDtoEntity)
+                .map(mappingUtil::mapAccountDtoToEntity)
                 .toList();
 
         accountEntityList = databaseRepository.addAccount(accountEntityList);
 
         return accountEntityList.stream()
-                .map(mappingUtil::mapAccountEntityDto)
+                .map(mappingUtil::mapAccountEntityToDto)
                 .toList();
     }
 
     public AccountUpdateDto updateAccount(long id, AccountUpdateDto accountUpdateDto) {
         return databaseRepository.updateAccount(id, accountUpdateDto);
+    }
+
+    public String isUserSignedUp(long userID) {
+        return databaseRepository.getAccountNumberByTelegramID(userID);
+    }
+
+    public String bindTelegramID(long chatID, String accountNumber) {
+        return String.valueOf(databaseRepository.bindTelegramID(chatID, accountNumber));
     }
 }
 

@@ -2,6 +2,7 @@ package com.vodokanal.accounting;
 
 import com.vodokanal.accounting.entity.ServiceEntity;
 import com.vodokanal.accounting.util.DatabaseRepository;
+import org.hibernate.SessionFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;

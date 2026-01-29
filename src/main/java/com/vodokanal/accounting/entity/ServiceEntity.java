@@ -16,7 +16,10 @@ public class ServiceEntity {
     private String name;
 
     @OneToMany(mappedBy = "service")
-    private List<TariffEntity> tariff;
+    private List<TariffEntity> tariffs;
+
+    @OneToMany(mappedBy = "service")
+    private List<MeterEntity> meters;
 
     public ServiceEntity() {
     }

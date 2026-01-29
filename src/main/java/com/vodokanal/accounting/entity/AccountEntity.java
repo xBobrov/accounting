@@ -1,6 +1,7 @@
 package com.vodokanal.accounting.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -9,17 +10,18 @@ import java.util.List;
 @Table(name = "account")
 public class AccountEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "my_seq", sequenceName = "my_sequence", allocationSize = 10)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "my_seq")
     private long id;
 
     @Column(name = "number", nullable = false, unique = true, length = 10)
     private String number;
 
-    //@NotNull
+    @NotNull
     @Column(name = "address", nullable = false, unique = true)
     private String address;
 
-   // @NotNull
+    @NotNull
     @Column(name = "payer", nullable = false)
     private String payer;
 
@@ -29,15 +31,15 @@ public class AccountEntity {
     @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean isActive;
 
-    @Column(name = "telegram")
-    private String telegram;
+    @Column(name = "telegram_id")
+    private Long telegramID;
 
     @Column(name = "balance", precision = 10, scale = 2,
             columnDefinition = "DECIMAL(10, 2) DEFAULT 0.0")
     private BigDecimal balance;
 
-//    @OneToMany(mappedBy = "account")
-//    private List<Meter> meters;
+    @OneToMany(mappedBy = "account")
+    private List<MeterEntity> meters;
 
 //    @OneToMany(mappedBy = "account")
 //    private List<Charge> charges;
@@ -71,8 +73,8 @@ public class AccountEntity {
         return isActive;
     }
 
-    public String getTelegram() {
-        return telegram;
+    public Long getTelegramID() {
+        return telegramID;
     }
 
     public void setId(long id) {
@@ -99,7 +101,7 @@ public class AccountEntity {
         this.isActive = active;
     }
 
-    public void setTelegram(String telegram) {
-        this.telegram = telegram;
+    public void setTelegramID(Long telegramID) {
+        this.telegramID = telegramID;
     }
 }
