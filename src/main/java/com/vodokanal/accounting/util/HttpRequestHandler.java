@@ -12,18 +12,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.*;
 import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-public class RequestHandler {
+public class HttpRequestHandler {
     private final AccountService accountService;
     private final TariffService tariffService;
 
-    private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(HttpRequestHandler.class);
 
-    public RequestHandler(AccountService accountService, TariffService tariffService) {
+    public HttpRequestHandler(AccountService accountService, TariffService tariffService) {
         this.accountService = accountService;
         this.tariffService = tariffService;
     }

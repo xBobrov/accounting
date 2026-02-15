@@ -9,8 +9,7 @@ import java.time.LocalDate;
 @Table(name = "meter")
 public class MeterEntity {
     @Id
-    @SequenceGenerator(name = "my_seq", sequenceName = "my_sequence", allocationSize = 10)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "my_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(name = "serial_number", nullable = false, unique = true, length = 10)

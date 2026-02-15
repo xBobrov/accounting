@@ -3,6 +3,7 @@ package com.vodokanal.accounting.util;
 import com.vodokanal.accounting.dto.AccountUpdateDto;
 import com.vodokanal.accounting.dto.TariffDto;
 import com.vodokanal.accounting.entity.AccountEntity;
+import com.vodokanal.accounting.entity.MeterEntity;
 import com.vodokanal.accounting.entity.ServiceEntity;
 import com.vodokanal.accounting.entity.TariffEntity;
 
@@ -17,8 +18,12 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Component;
 
-//import javax.management.Query;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 
@@ -50,14 +55,14 @@ public class DatabaseRepository {
 
             return entityList;
         } catch (ConstraintViolationException e) {
-            throw e;
+            throw new RuntimeException(e);
 
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
             }
 
-            throw e;
+            throw new RuntimeException(e);
         }
     }
 
@@ -103,7 +108,7 @@ public class DatabaseRepository {
 
     public TariffDto addTariff(TariffDto tariffDto) {
         return executeTransaction(session -> {
-            ServiceEntity serviceEntity = session.get(ServiceEntity.class, tariffDto.service());
+            ServiceEntity serviceEntity = getServiceEntityById(session, tariffDto.service());
 
             if (serviceEntity == null) {
                 throw new NoSuchElementException("Услуга для устанавливаемого тарифа не найдена");
@@ -117,7 +122,11 @@ public class DatabaseRepository {
         });
     }
 
-    //Добавление услуг по умолчанию при запуске программы
+    public ServiceEntity getServiceEntityById(Session session, long id) {
+        return session.get(ServiceEntity.class, id);
+    }
+
+    //Добавление услуг по умолчанию при запуске программы, убрать на релизе
     public void addService(List<ServiceEntity> serviceEntityList) {
         executeTransaction(session -> {
             serviceEntityList.forEach(session::persist);
@@ -126,23 +135,33 @@ public class DatabaseRepository {
         });
     }
 
-    public String getAccountNumberByTelegramID(long userID) {
+    public String getAccountDataByChatID(long chatID) {
         return executeQuery(session -> {
-            String hql = "FROM AccountEntity WHERE telegramID = :userID";
-            Query<AccountEntity> query = session.createQuery(hql, AccountEntity.class);
-            query.setParameter("userID", userID);
-
-            List<AccountEntity> resultList = query.getResultList();
+            List<AccountEntity> resultList = getAccountEntityByChatID(session, chatID);
 
             if (resultList.isEmpty()) {
                 return "";
             }
 
-            return resultList.getFirst().getNumber();
+            AccountEntity accountEntity = resultList.getFirst();
+
+            Map<String, String> responseMap = new HashMap<>();
+            responseMap.put("accountNumber", accountEntity.getNumber());
+            responseMap.put("balance", String.valueOf(accountEntity.getBalance()));
+
+            return mappingUtil.mapObjectToJson(responseMap);
         });
     }
 
-    public boolean bindTelegramID(long chatID, String accountNumber) {
+    public List<AccountEntity> getAccountEntityByChatID(Session session, long chatID) {
+        String hql = "FROM AccountEntity WHERE telegramID = :chatID";
+        Query<AccountEntity> query = session.createQuery(hql, AccountEntity.class);
+        query.setParameter("chatID", chatID);
+
+        return query.getResultList();
+    }
+
+    public String bindTelegramID(long chatID, String accountNumber) {
         return executeTransaction(session -> {
             String hql = "FROM AccountEntity WHERE number = :accountNumber";
             Query<AccountEntity> query = session.createQuery(hql, AccountEntity.class);
@@ -151,15 +170,61 @@ public class DatabaseRepository {
             List<AccountEntity> resultList = query.getResultList();
 
             if (resultList.isEmpty()) {
-                return false;
+                return "";
             }
 
             AccountEntity updateAccountEntity = resultList.getFirst();
             updateAccountEntity.setTelegramID(chatID);
             session.merge(updateAccountEntity);
 
-            return true;
-        });
+            log.info("К лицевому счету {} привязан телеграм id {}", accountNumber, chatID);
 
+            return String.valueOf(updateAccountEntity.getBalance());
+        });
+    }
+
+    private MeterEntity getMeterEntityByNumberAndAccount(Session session, AccountEntity accountEntity, String meterNumber) {
+        String hql = "FROM MeterEntity WHERE serialNumber = :meterNumber AND account = :accountEntity";
+        Query<MeterEntity> query = session.createQuery(hql, MeterEntity.class);
+        query.setParameter("meterNumber", meterNumber);
+        query.setParameter("accountEntity", accountEntity);
+
+        if (query.getResultList().isEmpty()) {
+            return null;
+        } else {
+            return query.getResultList().getFirst();
+        }
+    }
+
+    public String addMeter(long chatID, String meterJson) {
+        return executeTransaction(session -> {
+            Map<String, String> meterMap = mappingUtil.parseJsonToHashMap(meterJson);
+            AccountEntity accountEntity = getAccountEntityByChatID(session, chatID).getFirst();
+
+            MeterEntity meterEntity = getMeterEntityByNumberAndAccount(
+                    session,
+                    accountEntity,
+                    meterMap.get("serialNumber"));
+
+            if (meterEntity != null) {
+                return "";
+            }
+
+            ServiceEntity serviceEntity = getServiceEntityById(session, Long.parseLong(meterMap.get("service")));
+
+            meterEntity = new MeterEntity();
+            meterEntity.setSerialNumber(meterMap.get("serialNumber"));
+            meterEntity.setInitialValue(new BigDecimal(meterMap.get("initialValue")));
+            meterEntity.setService(serviceEntity);
+            meterEntity.setAccount(accountEntity);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            LocalDate date = LocalDate.parse(meterMap.get("expirationDate"), formatter);
+            meterEntity.setValidThru(date);
+
+            session.persist(meterEntity);
+
+            return String.valueOf(meterEntity.getId());
+        });
     }
 }

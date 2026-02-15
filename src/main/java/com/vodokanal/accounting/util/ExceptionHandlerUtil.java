@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 @ControllerAdvice
 public class ExceptionHandlerUtil {
-    private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(HttpRequestHandler.class);
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleException(Exception e) {

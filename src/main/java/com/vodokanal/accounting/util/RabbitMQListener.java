@@ -1,43 +1,55 @@
 package com.vodokanal.accounting.util;
 
-import com.vodokanal.accounting.dto.CustomerBotRequestDto;
-import com.vodokanal.accounting.dto.CustomerBotResponseDto;
 import com.vodokanal.accounting.enums.Operation;
 import com.vodokanal.accounting.service.AccountService;
+import com.vodokanal.accounting.service.MeterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 
 @Component
 public class RabbitMQListener {
     private final AccountService accountService;
+    private final MeterService meterService;
     private final MappingUtil mappingUtil;
 
-    public RabbitMQListener(AccountService accountService, MappingUtil mappingUtil) {
+    private static final Logger log = LoggerFactory.getLogger(RabbitMQListener.class);
+
+    public RabbitMQListener(AccountService accountService, MeterService meterService, MappingUtil mappingUtil) {
         this.accountService = accountService;
+        this.meterService = meterService;
         this.mappingUtil = mappingUtil;
     }
 
     @RabbitListener(queues = "${rabbitmq.queue.name}")
     @SendTo
     public String receiveMessage(String request) {
-        CustomerBotRequestDto customerBotRequestDto = mappingUtil.mapJsonToRequestDto(request);
-        long chatID = customerBotRequestDto.chatID();
-        String data = customerBotRequestDto.data();
-        Operation operation = customerBotRequestDto.operation();
+        Map<String, String> requestMap = mappingUtil.parseJsonToHashMap(request);
+        String operation = requestMap.get("operation");
 
-        if (operation == Operation.SIGNIN) {
+        log.info("Получен запрос из Телеграм: {}", request);
 
-            return mappingUtil.mapResponseDtoToJson(new CustomerBotResponseDto(
-                    accountService.isUserSignedUp(chatID)));
-        } else if (operation == Operation.SIGNUP) {
+        if (operation.equals(Operation.START.getOperation())) {
+            long chatID = Long.parseLong(requestMap.get("chatID"));
 
+            return accountService.getAccountByTelegramID(chatID);
+        } else if (operation.equals(Operation.BINDING_ID.getOperation())) {
+            long chatID = Long.parseLong(requestMap.get("chatID"));
+            String accountNumber = requestMap.get("accountNumber");
 
-            return mappingUtil.mapResponseDtoToJson(new CustomerBotResponseDto(
-                    accountService.bindTelegramID(chatID, data)));
+            return accountService.bindTelegramID(chatID, accountNumber);
+        } else if (operation.equals(Operation.ADD_METER.getOperation())) {
+            long chatID = Long.parseLong(requestMap.get("chatID"));
+            String meterJson = requestMap.get("meter");
+
+            return meterService.addMeter(chatID, meterJson);
         }
 
-        return null;
+        return "";
     }
 }

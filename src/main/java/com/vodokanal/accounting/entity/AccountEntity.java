@@ -104,4 +104,12 @@ public class AccountEntity {
     public void setTelegramID(Long telegramID) {
         this.telegramID = telegramID;
     }
+
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
 }

@@ -35,8 +35,8 @@ public class AccountService {
         return databaseRepository.updateAccount(id, accountUpdateDto);
     }
 
-    public String isUserSignedUp(long userID) {
-        return databaseRepository.getAccountNumberByTelegramID(userID);
+    public String getAccountByTelegramID(long chatID) {
+        return databaseRepository.getAccountDataByChatID(chatID);
     }
 
     public String bindTelegramID(long chatID, String accountNumber) {
