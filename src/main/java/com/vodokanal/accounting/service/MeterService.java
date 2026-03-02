@@ -1,26 +1,50 @@
 package com.vodokanal.accounting.service;
 
-import com.vodokanal.accounting.entity.MeterEntity;
+import com.vodokanal.accounting.dto.MeterDto;
+import com.vodokanal.accounting.exception.DataNotFoundException;
 import com.vodokanal.accounting.util.DatabaseRepository;
+import com.vodokanal.accounting.util.HttpRequestProducer;
 import com.vodokanal.accounting.util.MappingUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.Map;
+import java.time.LocalDate;
 
 @Service
 public class MeterService {
     private final DatabaseRepository databaseRepository;
     private final MappingUtil mappingUtil;
+    private final HttpRequestProducer httpRequestProducer;
 
-    public MeterService(DatabaseRepository databaseRepository, MappingUtil mappingUtil) {
+    @Value("${service.fgis.url}")
+    private String fgisUrl;
+
+    @Value("${service.fgis.params}")
+    private String fgisParams;
+
+    public MeterService(
+            DatabaseRepository databaseRepository,
+            MappingUtil mappingUtil,
+            HttpRequestProducer httpRequestProducer) {
         this.databaseRepository = databaseRepository;
         this.mappingUtil = mappingUtil;
+        this.httpRequestProducer = httpRequestProducer;
     }
 
-    public String addMeter(long chatID, String meterJson) {
-        return databaseRepository.addMeter(chatID, meterJson);
+    public MeterDto addMeter(MeterDto meterDto) {
+        LocalDate validThru = getValidThruDate(meterDto.verificationDate(), meterDto.serialNumber());
+        return databaseRepository.addMeter(meterDto, validThru);
     }
+
+    private LocalDate getValidThruDate(String verificationDate, String serialNumber) {
+        String fgisResponse = httpRequestProducer.get(fgisUrl + fgisParams.formatted(verificationDate, serialNumber));
+        String validThruString = mappingUtil.parseFGISResponse(fgisResponse);
+
+        if (validThruString.isEmpty()) {
+            throw new DataNotFoundException("ИПУ не обнаружено во ФГИС \"Аршин\"");
+        }
+
+        return mappingUtil.parseLocalDate(validThruString);
+    }
+
 }
-
-

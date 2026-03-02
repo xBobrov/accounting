@@ -2,8 +2,10 @@ package com.vodokanal.accounting.util;
 
 import com.vodokanal.accounting.dto.AccountDto;
 import com.vodokanal.accounting.dto.AccountUpdateDto;
+import com.vodokanal.accounting.dto.MeterDto;
 import com.vodokanal.accounting.dto.TariffDto;
 import com.vodokanal.accounting.service.AccountService;
+import com.vodokanal.accounting.service.MeterService;
 import com.vodokanal.accounting.service.TariffService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -19,12 +21,14 @@ import java.util.List;
 public class HttpRequestHandler {
     private final AccountService accountService;
     private final TariffService tariffService;
+    private final MeterService meterService;
 
     private static final Logger log = LoggerFactory.getLogger(HttpRequestHandler.class);
 
-    public HttpRequestHandler(AccountService accountService, TariffService tariffService) {
+    public HttpRequestHandler(AccountService accountService, TariffService tariffService, MeterService meterService) {
         this.accountService = accountService;
         this.tariffService = tariffService;
+        this.meterService = meterService;
     }
 
     @PostMapping("/account/add/list")
@@ -54,10 +58,17 @@ public class HttpRequestHandler {
     }
 
     @PostMapping("/tariff/add")
-    public ResponseEntity<TariffDto> addTariff(@RequestBody TariffDto tariffDto) {
+    public ResponseEntity<TariffDto> addTariff(@RequestBody @Valid TariffDto tariffDto) {
         log.info("Вызван метод addTariff с телом запроса: {}", tariffDto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(tariffService.addTariff(tariffDto));
+    }
+
+    @PostMapping("/meter/add")
+    public ResponseEntity<MeterDto> addMetter(@RequestBody @Valid MeterDto meterDto) {
+        log.info("Вызван метод addMeter с телом запроса: {}", meterDto);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(meterService.addMeter(meterDto));
     }
 
     @GetMapping

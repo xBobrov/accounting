@@ -41,7 +41,7 @@ public class AccountEntity {
     @OneToMany(mappedBy = "account")
     private List<MeterEntity> meters;
 
-//    @OneToMany(mappedBy = "account")
+//    @OneToMany(mappedBy = "accountNumber")
 //    private List<Charge> charges;
 
     public AccountEntity() {

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "meter")
@@ -12,8 +13,11 @@ public class MeterEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "serial_number", nullable = false, unique = true, length = 10)
+    @Column(name = "serial_number", nullable = false, length = 10)
     private String serialNumber;
+
+    @Column(name = "verification_date", nullable = false)
+    private LocalDate verificationDate;
 
     @Column(name = "valid_thru", nullable = false)
     private LocalDate validThru;
@@ -29,6 +33,9 @@ public class MeterEntity {
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     private AccountEntity account;
+
+    @OneToMany(mappedBy = "meter")
+    private List<ReadingEntity> readings;
 
     public MeterEntity() {
     }
@@ -65,6 +72,18 @@ public class MeterEntity {
         this.serialNumber = serialNumber;
     }
 
+    @Override
+    public String toString() {
+        return "MeterEntity{" +
+                "id=" + id +
+                ", serialNumber='" + serialNumber + '\'' +
+                ", validThru=" + validThru +
+                ", initialValue=" + initialValue +
+                ", service=" + service.getName() +
+                ", account=" + account.getNumber() +
+                '}';
+    }
+
     public void setValidThru(LocalDate validThru) {
         this.validThru = validThru;
     }
@@ -79,5 +98,21 @@ public class MeterEntity {
 
     public void setAccount(AccountEntity account) {
         this.account = account;
+    }
+
+    public LocalDate getVerificationDate() {
+        return verificationDate;
+    }
+
+    public void setVerificationDate(LocalDate verificationDate) {
+        this.verificationDate = verificationDate;
+    }
+
+    public List<ReadingEntity> getReadings() {
+        return readings;
+    }
+
+    public void setReadings(List<ReadingEntity> readings) {
+        this.readings = readings;
     }
 }

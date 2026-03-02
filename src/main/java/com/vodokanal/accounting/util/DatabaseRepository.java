@@ -1,12 +1,15 @@
 package com.vodokanal.accounting.util;
 
 import com.vodokanal.accounting.dto.AccountUpdateDto;
+import com.vodokanal.accounting.dto.MeterDto;
 import com.vodokanal.accounting.dto.TariffDto;
 import com.vodokanal.accounting.entity.AccountEntity;
 import com.vodokanal.accounting.entity.MeterEntity;
 import com.vodokanal.accounting.entity.ServiceEntity;
 import com.vodokanal.accounting.entity.TariffEntity;
 
+import com.vodokanal.accounting.exception.DataAlreadyExistsException;
+import com.vodokanal.accounting.exception.DataNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -39,7 +42,7 @@ public class DatabaseRepository {
         this.mappingUtil = mappingUtil;
     }
 
-    private <T> T executeTransaction(Function<Session, T> executable) {
+    private <T> T executeTransaction(Function<Session, T> applicable) {
         Transaction transaction = null;
 
         try (Session session = sessionFactory.openSession()) {
@@ -47,11 +50,9 @@ public class DatabaseRepository {
             transaction = session.getTransaction();
             transaction.begin();
 
-            var entityList = executable.apply(session);
+            var entityList = applicable.apply(session);
 
             transaction.commit();
-
-            log.info("В базу данных добавленна/обновлена запись: {}", executable); // переделать!  в лог пишет херню
 
             return entityList;
         } catch (ConstraintViolationException e) {
@@ -66,9 +67,9 @@ public class DatabaseRepository {
         }
     }
 
-    private <T> T executeQuery(Function<Session, T> executable) {
+    private <T> T executeQuery(Function<Session, T> applicable) {
         try (Session session = sessionFactory.openSession()) {
-            return executable.apply(session);
+            return applicable.apply(session);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -89,6 +90,82 @@ public class DatabaseRepository {
         });
     }
 
+    public TariffDto addTariff(TariffDto tariffDto) {
+        return executeTransaction(session -> {
+
+            ServiceEntity serviceEntity = getServiceEntity(session, tariffDto.service());
+
+            if (serviceEntity == null) {
+                throw new DataNotFoundException("Услуга для устанавливаемого тарифа не найдена");
+            }
+
+            TariffEntity tariffEntity;
+            List<TariffEntity> tariffEntityList = getTariffEntity(session, tariffDto.implementationDate(), tariffDto.service());
+
+            if (!tariffEntityList.isEmpty()) {
+                tariffEntity = tariffEntityList.getFirst();
+                tariffEntity.setRate(new BigDecimal(tariffDto.rate()));
+                updateTariffEntity(session, tariffEntity);
+
+                log.info("В базе данных обновлена запись: {}", tariffEntity);
+            } else {
+                tariffEntity = mappingUtil.mapTariffDtoToEntity(tariffDto);
+                tariffEntity.setService(serviceEntity);
+                session.persist(tariffEntity);
+
+                log.info("В базу данных добавлена запись: {}", tariffEntity);
+            }
+
+            return mappingUtil.mapTariffEntityToDto(tariffEntity);
+        });
+    }
+
+    public MeterDto addMeter(MeterDto meterDto, LocalDate validThru) {
+        return executeTransaction(session -> {
+            ServiceEntity serviceEntity = getServiceEntity(session, meterDto.service());
+
+            if (serviceEntity == null) {
+                throw new DataNotFoundException("Услуга для добовляемого ИПУ не найдена");
+            }
+
+            List<AccountEntity> accountEntityList = getAccountEntityList(session, meterDto.accountNumber());
+
+            if (accountEntityList.isEmpty()) {
+                throw new DataNotFoundException("Лицевой счет для добовляемого ИПУ не найден");
+            }
+
+            AccountEntity accountEntity = accountEntityList.getFirst();
+
+            List<MeterEntity> meterEntityList = getMeterEntityList(
+                    session,
+                    accountEntity,
+                    meterDto.serialNumber());
+
+            if (!meterEntityList.isEmpty()) {
+                throw new DataAlreadyExistsException("ИПУ с таким номером уже привязан к лицевому счету");
+            }
+
+            MeterEntity meterEntity = mappingUtil.mapMeterDtoToEntity(meterDto);
+            meterEntity.setAccount(accountEntity);
+            meterEntity.setService(serviceEntity);
+            meterEntity.setValidThru(validThru);
+
+            session.persist(meterEntity);
+            log.info("В базу данных добавлена запись: {}", meterEntity);
+
+            return mappingUtil.mapMeterEntityToDto(meterEntity);
+        });
+    }
+
+    //Добавление услуг по умолчанию при запуске программы, убрать на релизе
+    public void addService(List<ServiceEntity> serviceEntityList) {
+        executeTransaction(session -> {
+            serviceEntityList.forEach(session::persist);
+
+            return "";
+        });
+    }
+
     public AccountUpdateDto updateAccount(long id, AccountUpdateDto accountUpdateDto) {
         return executeTransaction(session -> {
             AccountEntity accountEntity = session.get(AccountEntity.class, id);
@@ -106,38 +183,42 @@ public class DatabaseRepository {
         });
     }
 
-    public TariffDto addTariff(TariffDto tariffDto) {
+    private void updateTariffEntity(Session session, TariffEntity tariffEntity) {
+        session.merge(tariffEntity);
+    }
+
+    private List<TariffEntity> getTariffEntity(Session session, String date, long service) {
+        String hql = "FROM TariffEntity WHERE implementationDate = :date AND service = :service";
+        Query<TariffEntity> query = session.createQuery(hql, TariffEntity.class);
+        query.setParameter("date", LocalDate.parse(date));
+        query.setParameter("service", getServiceEntity(session, service));
+
+        return query.getResultList();
+    }
+
+    public AccountEntity getAccountEntity(Session session, long id) {
+        return session.get(AccountEntity.class, id);
+    }
+
+    private List<AccountEntity> getAccountEntityList(Session session, long chatID) {
+        String hql = "FROM AccountEntity WHERE telegramID = :chatID";
+        Query<AccountEntity> query = session.createQuery(hql, AccountEntity.class);
+        query.setParameter("chatID", chatID);
+
+        return query.getResultList();
+    }
+
+    private List<AccountEntity> getAccountEntityList(Session session, String accountNumber) {
+        String hql = "FROM AccountEntity WHERE number = :accountNumber";
+        Query<AccountEntity> query = session.createQuery(hql, AccountEntity.class);
+        query.setParameter("accountNumber", accountNumber);
+
+        return query.getResultList();
+    }
+
+    public String getAccountData(long chatID) {
         return executeTransaction(session -> {
-            ServiceEntity serviceEntity = getServiceEntityById(session, tariffDto.service());
-
-            if (serviceEntity == null) {
-                throw new NoSuchElementException("Услуга для устанавливаемого тарифа не найдена");
-            }
-
-            TariffEntity tariffEntity = mappingUtil.mapTariffDtoToEntity(tariffDto, serviceEntity);
-
-            session.persist(tariffEntity);
-
-            return mappingUtil.mapTariffEntityToDto(tariffEntity);
-        });
-    }
-
-    public ServiceEntity getServiceEntityById(Session session, long id) {
-        return session.get(ServiceEntity.class, id);
-    }
-
-    //Добавление услуг по умолчанию при запуске программы, убрать на релизе
-    public void addService(List<ServiceEntity> serviceEntityList) {
-        executeTransaction(session -> {
-            serviceEntityList.forEach(session::persist);
-
-            return "";
-        });
-    }
-
-    public String getAccountDataByChatID(long chatID) {
-        return executeQuery(session -> {
-            List<AccountEntity> resultList = getAccountEntityByChatID(session, chatID);
+            List<AccountEntity> resultList = getAccountEntityList(session, chatID);
 
             if (resultList.isEmpty()) {
                 return "";
@@ -153,12 +234,17 @@ public class DatabaseRepository {
         });
     }
 
-    public List<AccountEntity> getAccountEntityByChatID(Session session, long chatID) {
-        String hql = "FROM AccountEntity WHERE telegramID = :chatID";
-        Query<AccountEntity> query = session.createQuery(hql, AccountEntity.class);
-        query.setParameter("chatID", chatID);
+    private List<MeterEntity> getMeterEntityList(Session session, AccountEntity accountEntity, String meterNumber) {
+        String hql = "FROM MeterEntity WHERE serialNumber = :meterNumber AND account = :accountEntity";
+        Query<MeterEntity> query = session.createQuery(hql, MeterEntity.class);
+        query.setParameter("meterNumber", meterNumber);
+        query.setParameter("accountEntity", accountEntity);
 
         return query.getResultList();
+    }
+
+    private ServiceEntity getServiceEntity(Session session, long id) {
+        return session.get(ServiceEntity.class, id);
     }
 
     public String bindTelegramID(long chatID, String accountNumber) {
@@ -180,51 +266,6 @@ public class DatabaseRepository {
             log.info("К лицевому счету {} привязан телеграм id {}", accountNumber, chatID);
 
             return String.valueOf(updateAccountEntity.getBalance());
-        });
-    }
-
-    private MeterEntity getMeterEntityByNumberAndAccount(Session session, AccountEntity accountEntity, String meterNumber) {
-        String hql = "FROM MeterEntity WHERE serialNumber = :meterNumber AND account = :accountEntity";
-        Query<MeterEntity> query = session.createQuery(hql, MeterEntity.class);
-        query.setParameter("meterNumber", meterNumber);
-        query.setParameter("accountEntity", accountEntity);
-
-        if (query.getResultList().isEmpty()) {
-            return null;
-        } else {
-            return query.getResultList().getFirst();
-        }
-    }
-
-    public String addMeter(long chatID, String meterJson) {
-        return executeTransaction(session -> {
-            Map<String, String> meterMap = mappingUtil.parseJsonToHashMap(meterJson);
-            AccountEntity accountEntity = getAccountEntityByChatID(session, chatID).getFirst();
-
-            MeterEntity meterEntity = getMeterEntityByNumberAndAccount(
-                    session,
-                    accountEntity,
-                    meterMap.get("serialNumber"));
-
-            if (meterEntity != null) {
-                return "";
-            }
-
-            ServiceEntity serviceEntity = getServiceEntityById(session, Long.parseLong(meterMap.get("service")));
-
-            meterEntity = new MeterEntity();
-            meterEntity.setSerialNumber(meterMap.get("serialNumber"));
-            meterEntity.setInitialValue(new BigDecimal(meterMap.get("initialValue")));
-            meterEntity.setService(serviceEntity);
-            meterEntity.setAccount(accountEntity);
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            LocalDate date = LocalDate.parse(meterMap.get("expirationDate"), formatter);
-            meterEntity.setValidThru(date);
-
-            session.persist(meterEntity);
-
-            return String.valueOf(meterEntity.getId());
         });
     }
 }

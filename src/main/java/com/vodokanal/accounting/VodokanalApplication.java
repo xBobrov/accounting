@@ -34,6 +34,6 @@ public class VodokanalApplication {
 
         DatabaseRepository databaseRepository = context.getBean(DatabaseRepository.class);
 
-      //  databaseRepository.addService(serviceEntityList);
+        databaseRepository.addService(serviceEntityList);
     }
 }

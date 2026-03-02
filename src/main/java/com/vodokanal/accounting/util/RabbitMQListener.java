@@ -43,11 +43,6 @@ public class RabbitMQListener {
             String accountNumber = requestMap.get("accountNumber");
 
             return accountService.bindTelegramID(chatID, accountNumber);
-        } else if (operation.equals(Operation.ADD_METER.getOperation())) {
-            long chatID = Long.parseLong(requestMap.get("chatID"));
-            String meterJson = requestMap.get("meter");
-
-            return meterService.addMeter(chatID, meterJson);
         }
 
         return "";

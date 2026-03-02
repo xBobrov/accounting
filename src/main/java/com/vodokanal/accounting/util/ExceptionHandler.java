@@ -1,6 +1,8 @@
 package com.vodokanal.accounting.util;
 
 import com.vodokanal.accounting.dto.ErrorResponseDto;
+import com.vodokanal.accounting.exception.DataAlreadyExistsException;
+import com.vodokanal.accounting.exception.DataNotFoundException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -11,16 +13,15 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ControllerAdvice
-public class ExceptionHandlerUtil {
+public class ExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(HttpRequestHandler.class);
 
-    @ExceptionHandler(Exception.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleException(Exception e) {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
@@ -30,8 +31,8 @@ public class ExceptionHandlerUtil {
         return new ResponseEntity<>(errorResponseDto, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<ErrorResponseDto> handleNoSuchElementException(NoSuchElementException e) {
+    @org.springframework.web.bind.annotation.ExceptionHandler(DataNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleDataNotFoundException(DataNotFoundException e) {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
                 "Bad Request", e.getMessage());
@@ -40,7 +41,19 @@ public class ExceptionHandlerUtil {
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(DataAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDto> handleDataAlreadyExistsException(DataAlreadyExistsException e) {
+
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
+                "Conflict", e.getMessage());
+        log.error("При записи в базу данных произошла ошибка: {}", e.getMessage());
+
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+    }
+
+
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponseDto> handleConstraintViolationException(ConstraintViolationException e) {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
@@ -50,7 +63,7 @@ public class ExceptionHandlerUtil {
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(HandlerMethodValidationException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ErrorResponseDto> handleHMVException(HandlerMethodValidationException e) {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),
@@ -60,7 +73,7 @@ public class ExceptionHandlerUtil {
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(LocalDateTime.now(),

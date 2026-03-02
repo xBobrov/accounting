@@ -36,7 +36,7 @@ public class AccountService {
     }
 
     public String getAccountByTelegramID(long chatID) {
-        return databaseRepository.getAccountDataByChatID(chatID);
+        return databaseRepository.getAccountData(chatID);
     }
 
     public String bindTelegramID(long chatID, String accountNumber) {

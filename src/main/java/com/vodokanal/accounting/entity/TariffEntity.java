@@ -56,4 +56,14 @@ public class TariffEntity {
     public BigDecimal getRate() {
         return rate;
     }
+
+    @Override
+    public String toString() {
+        return "TariffEntity{" +
+                "id=" + id +
+                ", service=" + service.getName() +
+                ", implementationDate=" + implementationDate +
+                ", rate=" + rate +
+                '}';
+    }
 }
