@@ -129,5 +129,12 @@ public class MappingUtil {
         return LocalDate.parse(date, formatter);
     }
 
-    //public MeterDto updateMeterDto(MeterDto meterDto, )
+    public MeterUpdateDto mapMeterEntityToUpdateDto(MeterEntity meterEntity) {
+        return new MeterUpdateDto(
+                meterEntity.getSerialNumber(),
+                meterEntity.getVerificationDate().toString(),
+                meterEntity.getValidThru().toString(),
+                meterEntity.getAccount().getNumber()
+        );
+    }
 }

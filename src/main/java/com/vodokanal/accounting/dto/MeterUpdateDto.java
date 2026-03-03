@@ -5,10 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
 
-public record MeterDto(
-        @Null(message = "Индитификатор записи не должен быть указан")
-        Long id,
-
+public record MeterUpdateDto(
         @NotBlank(message = "Не указан номер ИПУ")
         String serialNumber,
 
@@ -20,17 +17,9 @@ public record MeterDto(
         @Null(message = "Дата очередной поверки не должена быть указана")
         String validThru,
 
-        @NotNull(message = "Не указано текущее показание ИПУ")
-        @Pattern(regexp = "^\\d+([.]\\d{1,3})?$",
-                message = "Текущее показание имеет неверный формат," +
-                        " десятичная часть числа должна иметь не более трех знаков и отделятся точкой")
-        String initialValue,
-
-        @NotNull(message = "Не указан индитификатор услуги")
-        Long service,
-
-        @NotNull(message = "Не указан номер лицевого счета")@Pattern(regexp = "\\d{4}-\\d{3}-\\d",
+        @NotNull(message = "Не указан номер лицевого счета") @Pattern(regexp = "\\d{4}-\\d{3}-\\d",
                 message = "Номер лицевого счета не соответствует установленному формату")
         String accountNumber
 ) {
+
 }

@@ -37,12 +37,16 @@ public class RabbitMQListener {
         if (operation.equals(Operation.START.getOperation())) {
             long chatID = Long.parseLong(requestMap.get("chatID"));
 
-            return accountService.getAccountByTelegramID(chatID);
-        } else if (operation.equals(Operation.BINDING_ID.getOperation())) {
+            return accountService.getAccountData(chatID);
+        } else if (operation.equals(Operation.BIND_ID.getOperation())) {
             long chatID = Long.parseLong(requestMap.get("chatID"));
             String accountNumber = requestMap.get("accountNumber");
 
             return accountService.bindTelegramID(chatID, accountNumber);
+        } else if (operation.equals(Operation.METER_INFO.getOperation())) {
+            long chatID = Long.parseLong(requestMap.get("chatID"));
+
+            return accountService.getMeterData(chatID);
         }
 
         return "";

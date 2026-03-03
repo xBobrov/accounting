@@ -2,6 +2,7 @@ package com.vodokanal.accounting.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,8 +26,9 @@ public class AccountEntity {
     @Column(name = "payer", nullable = false)
     private String payer;
 
+    @ColumnDefault("''")
     @Column(name = "email")
-    private String email;
+    private String email = "";
 
     @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean isActive;

@@ -35,12 +35,16 @@ public class AccountService {
         return databaseRepository.updateAccount(id, accountUpdateDto);
     }
 
-    public String getAccountByTelegramID(long chatID) {
+    public String getAccountData(long chatID) {
         return databaseRepository.getAccountData(chatID);
     }
 
     public String bindTelegramID(long chatID, String accountNumber) {
-        return String.valueOf(databaseRepository.bindTelegramID(chatID, accountNumber));
+        return databaseRepository.bindTelegramID(chatID, accountNumber);
+    }
+
+    public String getMeterData(long chatID) {
+        return databaseRepository.getMeterData(chatID);
     }
 }
 

@@ -1,8 +1,6 @@
 package com.vodokanal.accounting.util;
 
-import com.vodokanal.accounting.dto.AccountUpdateDto;
-import com.vodokanal.accounting.dto.MeterDto;
-import com.vodokanal.accounting.dto.TariffDto;
+import com.vodokanal.accounting.dto.*;
 import com.vodokanal.accounting.entity.AccountEntity;
 import com.vodokanal.accounting.entity.MeterEntity;
 import com.vodokanal.accounting.entity.ServiceEntity;
@@ -23,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -224,13 +221,7 @@ public class DatabaseRepository {
                 return "";
             }
 
-            AccountEntity accountEntity = resultList.getFirst();
-
-            Map<String, String> responseMap = new HashMap<>();
-            responseMap.put("accountNumber", accountEntity.getNumber());
-            responseMap.put("balance", String.valueOf(accountEntity.getBalance()));
-
-            return mappingUtil.mapObjectToJson(responseMap);
+            return mappingUtil.mapObjectToJson(resultList.getFirst());
         });
     }
 
@@ -249,23 +240,83 @@ public class DatabaseRepository {
 
     public String bindTelegramID(long chatID, String accountNumber) {
         return executeTransaction(session -> {
-            String hql = "FROM AccountEntity WHERE number = :accountNumber";
-            Query<AccountEntity> query = session.createQuery(hql, AccountEntity.class);
-            query.setParameter("accountNumber", accountNumber);
-
-            List<AccountEntity> resultList = query.getResultList();
+            List<AccountEntity> resultList = getAccountEntityList(session, accountNumber);
 
             if (resultList.isEmpty()) {
+                log.info("Лицевой счет с номером {} не найден в базе данных", accountNumber);
                 return "";
             }
 
-            AccountEntity updateAccountEntity = resultList.getFirst();
-            updateAccountEntity.setTelegramID(chatID);
-            session.merge(updateAccountEntity);
+            AccountEntity accountEntity = resultList.getFirst();
+            accountEntity.setTelegramID(chatID);
+            session.merge(accountEntity);
 
             log.info("К лицевому счету {} привязан телеграм id {}", accountNumber, chatID);
 
-            return String.valueOf(updateAccountEntity.getBalance());
+            return mappingUtil.mapObjectToJson(accountEntity);
+        });
+    }
+
+    public MeterUpdateDto updateMeter(MeterUpdateDto meterUpdateDto, LocalDate validThru) {
+        return executeTransaction(session -> {
+            List<AccountEntity> accountEntityList = getAccountEntityList(session, meterUpdateDto.accountNumber());
+
+            if (accountEntityList.isEmpty()) {
+                throw new DataNotFoundException("Лицевой счет для обновляемого ИПУ не найден");
+            }
+
+            AccountEntity accountEntity = accountEntityList.getFirst();
+
+            List<MeterEntity> meterEntityList = getMeterEntityList(
+                    session,
+                    accountEntity,
+                    meterUpdateDto.serialNumber());
+
+            if (meterEntityList.isEmpty()) {
+                throw new DataNotFoundException("ИПУ с номером %s не привязан к лицевому счету %s".formatted(
+                        meterUpdateDto.serialNumber(),
+                        accountEntity.getNumber()
+                ));
+            }
+
+            MeterEntity meterEntity = meterEntityList.getFirst();
+            meterEntity.setVerificationDate(LocalDate.parse(meterUpdateDto.verificationDate()));
+            meterEntity.setValidThru(validThru);
+            session.merge(meterEntity);
+
+            log.info("В базе данных обновлена запись: {}", meterEntity);
+
+            return mappingUtil.mapMeterEntityToUpdateDto(meterEntity);
+        });
+    }
+
+    public String getMeterData(long chatID) {
+        return executeQuery(session -> {
+           List<MeterDataDto> table = session.createNativeQuery(
+                   """
+                           SELECT\s
+                               mtr.id AS id,
+                               mtr.serial_number AS number,
+                               srv.name AS service,
+                               mtr.valid_thru AS valid,
+                               COALESCE(rdg.value, mtr.initial_value) AS last_reading
+                           FROM meter mtr
+                           JOIN account acc ON mtr.account_id = acc.id
+                           JOIN service srv ON mtr.service_id = srv.id
+                           LEFT JOIN LATERAL (
+                               SELECT value\s
+                               FROM reading\s
+                               WHERE meter_id = mtr.id\s
+                               ORDER BY date DESC\s
+                               LIMIT 1
+                           ) rdg ON TRUE
+                           WHERE acc.telegram_id = :telegram_id;""",
+                   MeterDataDto.class
+           ).setParameter("telegram_id", chatID).getResultList();
+
+           String s = mappingUtil.mapObjectToJson(table);
+
+            return mappingUtil.mapObjectToJson(table);
         });
     }
 }

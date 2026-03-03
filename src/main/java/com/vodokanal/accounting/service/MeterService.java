@@ -1,10 +1,12 @@
 package com.vodokanal.accounting.service;
 
 import com.vodokanal.accounting.dto.MeterDto;
+import com.vodokanal.accounting.dto.MeterUpdateDto;
 import com.vodokanal.accounting.exception.DataNotFoundException;
 import com.vodokanal.accounting.util.DatabaseRepository;
 import com.vodokanal.accounting.util.HttpRequestProducer;
 import com.vodokanal.accounting.util.MappingUtil;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,7 @@ public class MeterService {
 
     public MeterDto addMeter(MeterDto meterDto) {
         LocalDate validThru = getValidThruDate(meterDto.verificationDate(), meterDto.serialNumber());
+
         return databaseRepository.addMeter(meterDto, validThru);
     }
 
@@ -47,4 +50,9 @@ public class MeterService {
         return mappingUtil.parseLocalDate(validThruString);
     }
 
+    public MeterUpdateDto updateMeter(MeterUpdateDto meterUpdateDto) {
+        LocalDate validThru = getValidThruDate(meterUpdateDto.verificationDate(), meterUpdateDto.serialNumber());
+
+        return databaseRepository.updateMeter(meterUpdateDto, validThru);
+    }
 }

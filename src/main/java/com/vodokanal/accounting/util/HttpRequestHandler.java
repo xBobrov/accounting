@@ -1,9 +1,6 @@
 package com.vodokanal.accounting.util;
 
-import com.vodokanal.accounting.dto.AccountDto;
-import com.vodokanal.accounting.dto.AccountUpdateDto;
-import com.vodokanal.accounting.dto.MeterDto;
-import com.vodokanal.accounting.dto.TariffDto;
+import com.vodokanal.accounting.dto.*;
 import com.vodokanal.accounting.service.AccountService;
 import com.vodokanal.accounting.service.MeterService;
 import com.vodokanal.accounting.service.TariffService;
@@ -69,6 +66,13 @@ public class HttpRequestHandler {
         log.info("Вызван метод addMeter с телом запроса: {}", meterDto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(meterService.addMeter(meterDto));
+    }
+
+    @PostMapping("/meter/update")
+    public ResponseEntity<MeterUpdateDto> updateMetter(@RequestBody @Valid MeterUpdateDto meterUpdateDto) {
+        log.info("Вызван метод updateMetter с телом запроса: {}", meterUpdateDto);
+
+        return ResponseEntity.status(HttpStatus.OK).body(meterService.updateMeter(meterUpdateDto));
     }
 
     @GetMapping
