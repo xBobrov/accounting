@@ -29,24 +29,39 @@ public class RabbitMQListener {
     @RabbitListener(queues = "${rabbitmq.queue.name}")
     @SendTo
     public String receiveMessage(String request) {
-        Map<String, String> requestMap = mappingUtil.parseJsonToHashMap(request);
-        String operation = requestMap.get("operation");
-
         log.info("Получен запрос из Телеграм: {}", request);
 
+        Map<String, String> requestMap = mappingUtil.parseJsonToHashMap(request);
+        String operation = requestMap.get("operation");
+        long chatID = Long.parseLong(requestMap.get("chatID"));
+
         if (operation.equals(Operation.START.getOperation())) {
-            long chatID = Long.parseLong(requestMap.get("chatID"));
-
             return accountService.getAccountData(chatID);
+
         } else if (operation.equals(Operation.BIND_ID.getOperation())) {
-            long chatID = Long.parseLong(requestMap.get("chatID"));
             String accountNumber = requestMap.get("accountNumber");
-
             return accountService.bindTelegramID(chatID, accountNumber);
-        } else if (operation.equals(Operation.METER_INFO.getOperation())) {
-            long chatID = Long.parseLong(requestMap.get("chatID"));
 
-            return accountService.getMeterData(chatID);
+        } else if (operation.equals(Operation.EMAIL_INFO.getOperation())) {
+            return accountService.getEmail(chatID);
+
+        } else if (operation.equals(Operation.METER_INFO.getOperation())) {
+            return meterService.getAllMetersData(chatID);
+
+        } else if (operation.equals(Operation.CHANGE_EMAIL.getOperation())) {
+            String email = requestMap.get("email");
+            return accountService.changeEmail(chatID, email);
+
+        } else if (operation.equals(Operation.METER_VALIDATION.getOperation())) {
+            String meterNumber = requestMap.get("meterNumber");
+            return meterService.getMeterData(chatID, meterNumber);
+
+        } else if (operation.equals(Operation.READING_TRANSMIT.getOperation())) {
+            String meterNumber = requestMap.get("meterNumber");
+            String currentReading = requestMap.get("currentReading");
+            String consumption = requestMap.get("consumption");
+
+            return meterService.saveReading(chatID, meterNumber, currentReading, consumption);
         }
 
         return "";

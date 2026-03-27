@@ -8,6 +8,6 @@ public record MeterDataDto(
         String number,
         String service,
         Date valid,
-        BigDecimal last_reading
+        BigDecimal lastReading
 ) {
 }

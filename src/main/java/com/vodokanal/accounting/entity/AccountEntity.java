@@ -43,8 +43,8 @@ public class AccountEntity {
     @OneToMany(mappedBy = "account")
     private List<MeterEntity> meters;
 
-//    @OneToMany(mappedBy = "accountNumber")
-//    private List<Charge> charges;
+    @OneToMany(mappedBy = "account")
+    private List<TransactionEntity> transactions;
 
     public AccountEntity() {
         this.isActive = true;

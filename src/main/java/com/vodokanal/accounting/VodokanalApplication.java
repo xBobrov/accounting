@@ -40,5 +40,6 @@ public class VodokanalApplication {
 
       //  databaseRepository.addService(serviceEntityList);
         //String s = databaseRepository.getMeterData(689050626);
+       // System.out.println(databaseRepository.testUpdate());
     }
 }

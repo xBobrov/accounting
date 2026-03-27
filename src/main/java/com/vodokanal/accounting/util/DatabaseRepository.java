@@ -1,10 +1,7 @@
 package com.vodokanal.accounting.util;
 
 import com.vodokanal.accounting.dto.*;
-import com.vodokanal.accounting.entity.AccountEntity;
-import com.vodokanal.accounting.entity.MeterEntity;
-import com.vodokanal.accounting.entity.ServiceEntity;
-import com.vodokanal.accounting.entity.TariffEntity;
+import com.vodokanal.accounting.entity.*;
 
 import com.vodokanal.accounting.exception.DataAlreadyExistsException;
 import com.vodokanal.accounting.exception.DataNotFoundException;
@@ -21,9 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 
@@ -290,33 +285,124 @@ public class DatabaseRepository {
         });
     }
 
-    public String getMeterData(long chatID) {
+    public String getAllMetersData(long chatID) {
         return executeQuery(session -> {
-           List<MeterDataDto> table = session.createNativeQuery(
-                   """
-                           SELECT\s
-                               mtr.id AS id,
-                               mtr.serial_number AS number,
-                               srv.name AS service,
-                               mtr.valid_thru AS valid,
-                               COALESCE(rdg.value, mtr.initial_value) AS last_reading
-                           FROM meter mtr
-                           JOIN account acc ON mtr.account_id = acc.id
-                           JOIN service srv ON mtr.service_id = srv.id
-                           LEFT JOIN LATERAL (
-                               SELECT value\s
-                               FROM reading\s
-                               WHERE meter_id = mtr.id\s
-                               ORDER BY date DESC\s
-                               LIMIT 1
-                           ) rdg ON TRUE
-                           WHERE acc.telegram_id = :telegram_id;""",
-                   MeterDataDto.class
-           ).setParameter("telegram_id", chatID).getResultList();
+            List<MeterDataDto> meterDataDtoList = session.createNativeQuery(
+                            """
+                                    SELECT\s
+                                        mtr.id AS id,
+                                        mtr.serial_number AS number,
+                                        srv.name AS service,
+                                        mtr.valid_thru AS valid,
+                                        COALESCE(rdg.value, mtr.initial_value) AS last_reading
+                                    FROM meter mtr
+                                    JOIN account acc ON mtr.account_id = acc.id
+                                    JOIN service srv ON mtr.service_id = srv.id
+                                    LEFT JOIN LATERAL (
+                                        SELECT value\s
+                                        FROM reading\s
+                                        WHERE meter_id = mtr.id\s
+                                        ORDER BY date DESC\s
+                                        LIMIT 1
+                                    ) rdg ON TRUE
+                                    WHERE acc.telegram_id = :telegram_id;""",
+                            MeterDataDto.class)
+                    .setParameter("telegram_id", chatID)
+                    .getResultList();
 
-           String s = mappingUtil.mapObjectToJson(table);
+            return mappingUtil.mapObjectToJson(meterDataDtoList);
+        });
+    }
 
-            return mappingUtil.mapObjectToJson(table);
+    public String changeEmail(long chatID, String email) {
+        return executeTransaction(session -> {
+            AccountEntity accountEntity = getAccountEntityList(session, chatID).getFirst();
+
+            if (email.equals("0")) {
+                accountEntity.setEmail("");
+            } else {
+                accountEntity.setEmail(email);
+            }
+
+            session.merge(accountEntity);
+            log.info("У лицевого счета {} изменен email: {}", accountEntity.getNumber(), accountEntity.getEmail());
+
+            return accountEntity.getEmail();
+        });
+
+    }
+
+    public String getMetersData(long chatID, String meterNumber) {
+        return executeQuery(session -> {
+            List<MeterDataDto> meterDataDtoList = session.createNativeQuery(
+                            """
+                                    SELECT\s
+                                        mtr.id AS id,
+                                        mtr.serial_number AS number,
+                                        srv.name AS service,
+                                        mtr.valid_thru AS valid,
+                                        COALESCE(rdg.value, mtr.initial_value) AS last_reading
+                                    FROM meter mtr
+                                    JOIN account acc ON mtr.account_id = acc.id
+                                    JOIN service srv ON mtr.service_id = srv.id
+                                    LEFT JOIN LATERAL (
+                                        SELECT value\s
+                                        FROM reading\s
+                                        WHERE meter_id = mtr.id\s
+                                        ORDER BY date DESC\s
+                                        LIMIT 1
+                                    ) rdg ON TRUE
+                                    WHERE acc.telegram_id = :telegram_id
+                                    AND mtr.serial_number = :meter_number;""",
+                            MeterDataDto.class)
+                    .setParameter("telegram_id", chatID)
+                    .setParameter("meter_number", meterNumber)
+                    .getResultList();
+
+            if (meterDataDtoList.isEmpty()) {
+                return "";
+            } else {
+                return mappingUtil.mapObjectToJson(meterDataDtoList.getFirst());
+            }
+        });
+    }
+
+    public String saveReading(
+            long chatID,
+            String meterNumber,
+            BigDecimal currentReading,
+            BigDecimal consumption,
+            LocalDate date) {
+        return executeTransaction(session -> {
+
+            int rowsInserted = session.createNativeMutationQuery("""
+                            INSERT INTO reading (consumption, date, value, meter_id)
+                            SELECT :consumption, :date, :current_reading, mtr.id
+                            FROM meter mtr
+                            JOIN account acc
+                            ON mtr.account_id = acc.id
+                            WHERE mtr.serial_number = :serial_number
+                            AND acc.telegram_id = :telegram_id
+                            ON CONFLICT (date, meter_id)
+                            DO UPDATE SET\s
+                                consumption = EXCLUDED.consumption,
+                            	value = EXCLUDED.value
+                            """)
+                    .setParameter("serial_number", meterNumber)
+                    .setParameter("telegram_id", chatID)
+                    .setParameter("consumption", consumption)
+                    .setParameter("current_reading", currentReading)
+                    .setParameter("date", date).executeUpdate();
+
+            return String.valueOf(rowsInserted);
+        });
+    }
+
+    public String getEmail(long chatID) {
+        return executeQuery(session -> {
+            AccountEntity accountEntity = getAccountEntityList(session, chatID).getFirst();
+
+            return accountEntity.getEmail();
         });
     }
 }

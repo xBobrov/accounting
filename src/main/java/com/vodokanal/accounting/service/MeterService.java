@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Service
@@ -54,5 +55,30 @@ public class MeterService {
         LocalDate validThru = getValidThruDate(meterUpdateDto.verificationDate(), meterUpdateDto.serialNumber());
 
         return databaseRepository.updateMeter(meterUpdateDto, validThru);
+    }
+
+    public String getAllMetersData(long chatID) {
+        return databaseRepository.getAllMetersData(chatID);
+    }
+
+    public String getMeterData(long chatID, String meterNumber) {
+        return databaseRepository.getMetersData(chatID, meterNumber);
+    }
+
+    public String saveReading(long chatID, String meterNumber, String currentReading, String consumption) {
+        BigDecimal currentReadingBigDecimal = new BigDecimal(currentReading);
+        BigDecimal consumptionBigDecimal = new BigDecimal(consumption);
+
+        return databaseRepository.saveReading(
+                chatID,
+                meterNumber,
+                currentReadingBigDecimal,
+                consumptionBigDecimal,
+                createDate());
+    }
+
+    private LocalDate createDate() {
+        LocalDate date = LocalDate.now();
+        return date.withDayOfMonth(1);
     }
 }

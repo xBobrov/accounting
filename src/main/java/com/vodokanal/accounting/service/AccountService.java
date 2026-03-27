@@ -43,8 +43,12 @@ public class AccountService {
         return databaseRepository.bindTelegramID(chatID, accountNumber);
     }
 
-    public String getMeterData(long chatID) {
-        return databaseRepository.getMeterData(chatID);
+    public String changeEmail(long chatID, String email) {
+        return databaseRepository.changeEmail(chatID, email);
+    }
+
+    public String getEmail(long chatID) {
+        return databaseRepository.getEmail(chatID);
     }
 }
 
