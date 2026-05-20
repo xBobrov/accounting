@@ -1,5 +1,6 @@
 package com.vodokanal.accounting.entity;
 
+import com.vodokanal.accounting.dto.BillCalculationDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
@@ -33,6 +34,9 @@ public class AccountEntity {
     @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean isActive;
 
+    @Column(name = "is_normed", columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean isNormed;
+
     @Column(name = "telegram_id")
     private Long telegramID;
 
@@ -40,11 +44,17 @@ public class AccountEntity {
             columnDefinition = "DECIMAL(10, 2) DEFAULT 0.0")
     private BigDecimal balance;
 
+    @Column(name = "resident_regd")
+    private int residentRegd;
+
     @OneToMany(mappedBy = "account")
     private List<MeterEntity> meters;
 
     @OneToMany(mappedBy = "account")
     private List<TransactionEntity> transactions;
+
+    @OneToMany(mappedBy = "account")
+    private List<CalculationEntity> calculations;
 
     public AccountEntity() {
         this.isActive = true;
@@ -113,5 +123,21 @@ public class AccountEntity {
 
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public int getResidentRegd() {
+        return residentRegd;
+    }
+
+    public void setResidentRegd(int residentRegd) {
+        this.residentRegd = residentRegd;
     }
 }

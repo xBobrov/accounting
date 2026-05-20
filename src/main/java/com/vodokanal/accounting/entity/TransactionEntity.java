@@ -15,9 +15,9 @@ public class TransactionEntity {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "balance", precision = 10, scale = 2,
+    @Column(name = "sum", precision = 10, scale = 2,
             columnDefinition = "DECIMAL(10, 2) DEFAULT 0.0")
-    private BigDecimal amount;
+    private BigDecimal sum;
 
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
@@ -35,11 +35,11 @@ public class TransactionEntity {
     }
 
     public BigDecimal getAmount() {
-        return amount;
+        return sum;
     }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+    public void setAmount(BigDecimal sum) {
+        this.sum = sum;
     }
 
     public AccountEntity getAccount() {

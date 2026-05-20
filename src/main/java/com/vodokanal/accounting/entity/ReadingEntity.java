@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name="reading")
+@Table(name="reading", uniqueConstraints = {
+        @UniqueConstraint(name = "uc_reading", columnNames = {"date", "meter_id"})
+})
 public class ReadingEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

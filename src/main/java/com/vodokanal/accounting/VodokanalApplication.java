@@ -1,18 +1,23 @@
 package com.vodokanal.accounting;
 
-import com.vodokanal.accounting.entity.AccountEntity;
+import com.itextpdf.html2pdf.ConverterProperties;
+import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.layout.font.FontProvider;
+import com.vodokanal.accounting.dto.Tmp;
 import com.vodokanal.accounting.entity.ServiceEntity;
 import com.vodokanal.accounting.util.DatabaseRepository;
-import com.vodokanal.accounting.util.MappingUtil;
-import org.hibernate.SessionFactory;
+import com.vodokanal.accounting.util.QRCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
-import java.math.BigDecimal;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 @SpringBootApplication
@@ -37,8 +42,7 @@ public class VodokanalApplication {
         serviceEntityList.add(serviceEntity);
 
         DatabaseRepository databaseRepository = context.getBean(DatabaseRepository.class);
-
-      //  databaseRepository.addService(serviceEntityList);
+        //  databaseRepository.addService(serviceEntityList);
         //String s = databaseRepository.getMeterData(689050626);
        // System.out.println(databaseRepository.testUpdate());
     }

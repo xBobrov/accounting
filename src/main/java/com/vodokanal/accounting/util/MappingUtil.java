@@ -41,7 +41,8 @@ public class MappingUtil {
                 accountEntity.getId(),
                 accountEntity.getNumber(),
                 accountEntity.getAddress(),
-                accountEntity.getPayer()
+                accountEntity.getPayer(),
+                accountEntity.getResidentRegd()
         );
     }
 

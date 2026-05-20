@@ -1,5 +1,6 @@
 package com.vodokanal.accounting.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
@@ -17,6 +18,9 @@ public record AccountDto(
         String address,
 
         @NotBlank(message = "Не указан плательщик")
-        String payer
+        String payer,
+
+        @Min(value = 0, message = "Количество зарегистрированных не может быть меньше 0")
+        int residentRegd
 ) {
 }

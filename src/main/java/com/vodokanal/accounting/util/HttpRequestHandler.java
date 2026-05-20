@@ -7,7 +7,11 @@ import com.vodokanal.accounting.service.TariffService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,6 +56,20 @@ public class HttpRequestHandler {
         log.info("Вызван метод updateAccount с телом запроса: {}", accountUpdateDto);
 
         return ResponseEntity.status(HttpStatus.OK).body(accountService.updateAccount(id, accountUpdateDto));
+    }
+
+    @GetMapping("/account/download")
+    public ResponseEntity<Resource> downloadBill(@Valid BillRequestDto request) {
+
+        byte[] billPdf =  accountService.downloadBill(request);
+        ByteArrayResource resource = new ByteArrayResource(billPdf);
+        String filename = String.format("bill-%s-%s.pdf", request.number(), request.period());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentLength(billPdf.length)
+                .body(resource);
     }
 
     @PostMapping("/tariff/add")

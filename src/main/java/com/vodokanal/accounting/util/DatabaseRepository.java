@@ -5,6 +5,7 @@ import com.vodokanal.accounting.entity.*;
 
 import com.vodokanal.accounting.exception.DataAlreadyExistsException;
 import com.vodokanal.accounting.exception.DataNotFoundException;
+import jakarta.annotation.PostConstruct;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -14,10 +15,15 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
@@ -27,6 +33,29 @@ public class DatabaseRepository {
     private final SessionFactory sessionFactory;
     private final MappingUtil mappingUtil;
     private static final Logger log = LoggerFactory.getLogger(DatabaseRepository.class);
+
+    @Value("classpath:sql/calculation.sql")
+    private Resource calculationSqlFile;
+    private String calculationSqlText;
+
+    @Value("classpath:sql/bill_calculation.sql")
+    private Resource billCalculationSqlFile;
+    private String billCalculationSqlText;
+
+    @Value("classpath:sql/bill_meters.sql")
+    private Resource billMeterSqlFile;
+    private String billMeterSqlText;
+
+    @PostConstruct
+    public void init() throws Exception {
+        this.calculationSqlText = StreamUtils.copyToString(calculationSqlFile.getInputStream(), StandardCharsets.UTF_8);
+        this.billCalculationSqlText = StreamUtils.copyToString(
+                billCalculationSqlFile.getInputStream(),
+                StandardCharsets.UTF_8);
+        this.billMeterSqlText = StreamUtils.copyToString(
+                billMeterSqlFile.getInputStream(),
+                StandardCharsets.UTF_8);
+    }
 
 
     public DatabaseRepository(SessionFactory sessionFactory, MappingUtil mappingUtil) {
@@ -248,7 +277,7 @@ public class DatabaseRepository {
 
             log.info("К лицевому счету {} привязан телеграм id {}", accountNumber, chatID);
 
-            return mappingUtil.mapObjectToJson(accountEntity);
+            return mappingUtil.mapObjectToJson(resultList.getFirst());
         });
     }
 
@@ -405,4 +434,55 @@ public class DatabaseRepository {
             return accountEntity.getEmail();
         });
     }
+
+    public void fulfillCalculation(LocalDate readingDate) {
+        executeTransaction(session -> {
+            int rowsInserted = session.createNativeMutationQuery(calculationSqlText)
+                    .setParameter("date", readingDate)
+                    .executeUpdate();
+
+            return "";
+        });
+    }
+
+    public List<BillCalculationDTO> getBillCalculation(String accountNumber, LocalDate billPeriod, LocalDate readingDate) {
+        return executeTransaction(session -> session.createNativeQuery(
+                        billCalculationSqlText,
+                        Object[].class)
+                .setParameter("billPeriod", billPeriod)
+                .setParameter("readingDate", readingDate)
+                .setParameter("accountNumber", accountNumber)
+                .setTupleTransformer((tuple, aliases) -> new BillCalculationDTO(
+                        String.valueOf(tuple[0]),
+                        (Boolean) tuple[1],
+                        (String) tuple[2],
+                        (String) tuple[3],
+                        (String) tuple[4],
+                        (Integer) tuple[5],
+                        String.valueOf(tuple[6]),
+                        (BigDecimal) tuple[7],
+                        String.valueOf(tuple[8]),
+                        (BigDecimal) tuple[9],
+                        (Long) tuple[10]
+                ))
+                .getResultList());
+    }
+
+    public List<BillMeterDto> getBillMeter(String accountNumber, LocalDate readingDate) {
+        return executeTransaction(session -> session.createNativeQuery(
+                        billMeterSqlText,
+                        Object[].class)
+                .setParameter("readingDate", readingDate)
+                .setParameter("accountNumber", accountNumber)
+                .setTupleTransformer((tuple, aliases) -> new BillMeterDto(
+                        (String) tuple[0],
+                        (String) tuple[1],
+                        String.valueOf(tuple[2]),
+                        (BigDecimal) tuple[3],
+                        (Date) tuple[4],
+                        (BigDecimal) tuple[5]
+                ))
+                .getResultList());
+    }
 }
+

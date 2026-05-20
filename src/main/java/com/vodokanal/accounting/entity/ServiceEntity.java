@@ -20,6 +20,12 @@ public class ServiceEntity {
     @OneToMany(mappedBy = "service")
     private List<MeterEntity> meters;
 
+    @OneToMany(mappedBy = "service")
+    private List<NormEntity> norms;
+
+    @OneToMany(mappedBy = "service")
+    private List<CalculationEntity> calculations;
+
     public ServiceEntity() {
     }
 

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}">Title</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1mm 1mm 1mm 1mm;
+        }
+        body {
+            margin: 10px;
+            font-family: "Times New Roman", sans-serif;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<table style="width: 100%; border-collapse: collapse; border: none;">
+    <tr>
+        <td style="width: 20%; border: none; text-align: center; vertical-align: top">
+            <p>
+                СЧЕТ <br>
+                на оплату за <br>
+                <span th:text="${payMonthString}">*МЕСЯЦ ГОД*</span> <br>
+                (<span th:text="${payMonthPeriod}">*00.00*</span>) <br>
+                <span style="font-size: 20px;">💧</span> <br>
+                АО "ВОДОКАНАЛ"
+            </p>
+        </td>
+        <td style="width: 60%; border: none; vertical-align: top">
+            <b>ПОЛУЧАТЕЛЬ ПЛАТЕЖА АО "ВОДОКАНАЛ"</b> <br>
+            р/с 40632521252121474123 Филиал Центральный Банка ВТБ (ПАО) в г.Москве <br>
+            ИНН 2503022413, БИК 044525411 <br>
+            610035 г.Киров, Производственная улица, 25 <br>
+            <b>АБОНЕНТ:</b> <br>
+            Лицевой счет <span th:text="${accountNumber}">*000-0000-0*</span> <br>
+            Плательщик <span th:text="${payer}">*ФАМИЛИЯ И.О.*</span> <br>
+            Адрес: <span th:text="${address}">*ИНДЕКС, ГОРОД, УЛИЦА, ДОМ, КВАРТИРА*</span> <br>
+            Количество зарегистрированных: <span th:text="${residentNumber}">*0*</span>
+        </td>
+        <td style="width: 20%; border: none; text-align: center">
+            QR-код для оплаты <br>
+            <img th:src="${qrCode}" alt="QR Code" width="200" height="200"/>
+
+        </td>
+    </tr>
+</table>
+<hr>
+<table style="width: 100%; border-collapse: collapse; border: none;">
+    <tr>
+        <td style="width: 30%; border: none; vertical-align: top">
+            <b>Контакты для справок:</b> <br>
+            ул. Ленина, 25, Киров <br>
+            ул. Труда, 16а, г.Орлов <br>
+            vodokanal.ru - АО "Водоканал" <br>
+            диспетчерская: +7 (8323) 669‒501 круглосуточно
+        </td>
+        <td style="width: 70%; border: none; vertical-align: top">
+
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid black">
+                <thead>
+                <tr>
+                    <th style="border: 1px solid black">Счетчик N</th>
+                    <th style="border: 1px solid black">Тек. показания</th>
+                    <th style="border: 1px solid black">Расход</th>
+                    <th style="border: 1px solid black">Дата поверки</th>
+                    <th style="border: 1px solid black">Усл</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="meter : ${meters}">
+                    <td style="text-align: center; border: 1px solid black" th:text="${meter.meterNumber}">a</td>
+                    <td style="text-align: center; border: 1px solid black" th:text="${meter.value}">c</td>
+                    <td style="text-align: center; border: 1px solid black" th:text="${meter.consumption}">d</td>
+                    <td style="text-align: center; border: 1px solid black" th:text="${meter.valid}">e</td>
+                    <td style="text-align: center; border: 1px solid black" th:text="${meter.service}">f</td>
+                </tr>
+                </tbody>
+            </table>
+            <b style="font-size: smaller;">Показания ИПУ (счетчиков) принимаются с 20 по 25 число расчетного месяца</b>
+
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<table style="width: 100%; border-collapse: collapse; border: none">
+    <thead>
+    <tr>
+        <th style="border: 1px solid black">Вид услуги</th>
+        <th style="border: 1px solid black">Тариф (руб/м³)</th>
+        <th style="border: 1px solid black">Норматив (м³ на человека)</th>
+        <th style="border: 1px solid black">ИПУ (м³)</th>
+        <th style="border: 1px solid black">Сумма</th>
+        <th style="border: 1px solid black">Код*</th>
+        <th style="border: 1px solid black">Перерасчеты</th>
+        <th style="border: 1px solid black">К оплате</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="service : ${services}">
+        <td style="text-align: left; border: 1px solid black" th:text="${service.service}">*Услуга*</td>
+        <td style="text-align: center; border: 1px solid black" th:text="${service.tariff}">*Тариф*</td>
+        <td style="text-align: center; border: 1px solid black" th:text="${service.norm}">*Норматив*</td>
+        <td style="text-align: center; border: 1px solid black" th:text="${service.consumption}">*ИПУ*</td>
+        <td style="text-align: center; border: 1px solid black" th:text="${service.sum}">*Начислено*</td>
+        <td style="text-align: center; border: 1px solid black" th:text="${service.code}">*КОД*</td>
+        <td style="text-align: center; border: 1px solid black"></td>
+        <td style="text-align: center; border: 1px solid black" th:text="${service.sum}">*К оплате*</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="6" style="font-size: smaller; border: 1px solid black"><b>*Вид начисления:</b> 1 - по ИПУ,
+            2 - по нормативу</td>
+        <td colspan="1" style="text-align: right; border: 1px solid black">ИТОГО:</td>
+        <td style="text-align: center; border: 1px solid black" th:text="${total}">150</td>
+    </tr>
+    </tfoot>
+</table>
+<p>
+    <b>Оплатить до <span th:text="${payBefore}">*00.00.0000*</span></b></p>
+<p>
+    В случае несвоевременной оплаты, в соответствие с п.14 ст.155 Жилищного кодекса РФ N188-ФЗ от 29.12.04г. Вам будет
+    начислена пеня за каждый день просрочки платежа. <br>
+    Оплата принемаеится в любых филиалах Сбербанка, ПАО ВТБ, отделениях Почты России, на сайте vodokanal.ru, в мобильном
+    приложении "Коммунальщик+", кассе предприятия АО "Водоканал". <br>
+    Абонент вправе по своему выбору осуществлять предварительную оплату коммунальных услуг в счет будующих периодов
+    (п.65 ФЗ N 354 от 06.05.2011г.)
+</p>
+---- линия отрыва ---------------------------------------------------------------------
+</body>
+</html>
