@@ -11,8 +11,8 @@
     <groupId>com.vodokanal</groupId>
     <artifactId>accounting</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>vodokanal</name>
-    <description>vodokanal</description>
+    <name>accounting</name>
+    <description>accounting</description>
     <url/>
     <licenses>
         <license/>
