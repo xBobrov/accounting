@@ -3,12 +3,12 @@ package com.vodokanal.accounting.util;
 import com.vodokanal.accounting.enums.Operation;
 import com.vodokanal.accounting.service.AccountService;
 import com.vodokanal.accounting.service.MeterService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
-
 import java.util.Map;
 
 

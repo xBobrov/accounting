@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.vodokanal.accounting.dto.*;
 import com.vodokanal.accounting.entity.AccountEntity;
 import com.vodokanal.accounting.entity.MeterEntity;
@@ -23,7 +24,6 @@ public class MappingUtil {
         this.objectMapper = objectMapper;
     }
 
-    // dto to entity
     public AccountEntity mapAccountDtoToEntity(AccountDto accountDto) {
         AccountEntity accountEntity = new AccountEntity();
 
@@ -34,7 +34,6 @@ public class MappingUtil {
         return accountEntity;
     }
 
-    // entity to dto
     public AccountDto mapAccountEntityToDto(AccountEntity accountEntity) {
 
         return new AccountDto(
@@ -47,7 +46,9 @@ public class MappingUtil {
     }
 
     public AccountEntity mapAccountToUpdate(AccountUpdateDto accountUpdateDto, AccountEntity accountEntity) {
-        accountEntity.setPayer(accountUpdateDto.payer());
+        if (accountUpdateDto.payer() != null) {
+            accountEntity.setPayer(accountUpdateDto.payer());
+        }
         accountEntity.setIsActive(accountUpdateDto.isActive());
 
         return accountEntity;

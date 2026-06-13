@@ -1,9 +1,6 @@
 package com.vodokanal.accounting.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 
 public record TariffDto(
         @Null(message = "Индитификационный номер не должен быть указан")

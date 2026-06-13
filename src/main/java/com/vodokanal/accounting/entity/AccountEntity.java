@@ -1,15 +1,14 @@
 package com.vodokanal.accounting.entity;
 
-import com.vodokanal.accounting.dto.BillCalculationDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
-
-import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Table(name = "account")
+@Table(name = "account", indexes = {
+        @Index(name = "idx_account_telegram_id", columnList = "telegram_id"),
+})
 public class AccountEntity {
     @Id
     @SequenceGenerator(name = "my_seq", sequenceName = "my_sequence", allocationSize = 10)
@@ -40,10 +39,6 @@ public class AccountEntity {
     @Column(name = "telegram_id")
     private Long telegramID;
 
-    @Column(name = "balance", precision = 10, scale = 2,
-            columnDefinition = "DECIMAL(10, 2) DEFAULT 0.0")
-    private BigDecimal balance;
-
     @Column(name = "resident_regd")
     private int residentRegd;
 
@@ -58,7 +53,6 @@ public class AccountEntity {
 
     public AccountEntity() {
         this.isActive = true;
-        this.balance = BigDecimal.valueOf(0.0);
     }
 
     public long getId() {
@@ -115,14 +109,6 @@ public class AccountEntity {
 
     public void setTelegramID(Long telegramID) {
         this.telegramID = telegramID;
-    }
-
-    public BigDecimal getBalance() {
-        return balance;
-    }
-
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
     }
 
     public boolean isActive() {

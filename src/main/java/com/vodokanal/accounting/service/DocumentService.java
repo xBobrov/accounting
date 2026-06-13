@@ -4,20 +4,16 @@ import com.itextpdf.html2pdf.HtmlConverter;
 import com.vodokanal.accounting.dto.BillCalculationDTO;
 import com.vodokanal.accounting.dto.BillMeterDto;
 import com.vodokanal.accounting.util.QRCodeGenerator;
+
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 public class DocumentService {

@@ -1,7 +1,6 @@
 package com.vodokanal.accounting.entity;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 
 @Entity

@@ -5,8 +5,26 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
 
+/**
+ * Data Transfer Object for registering a new metering device.
+ * <p>
+ * This DTO encapsulates all necessary information required to link a physical
+ * device to a customer account, including initial readings and service types.
+ * It enforces strict validation rules for dates and numeric formats.
+ * </p>
+ *
+ * @param id               The unique technical identifier. Must be {@code null} during creation.
+ * @param serialNumber     The physical serial number of the device.
+ * @param verificationDate The date of the last official verification (format: YYYY-MM-DD).
+ * @param validThru        The calculated expiration date. Must be {@code null} in requests
+ *                         as it is retrieved from the federal registry (FGIS Arshin).
+ * @param initialValue     The starting reading value at the moment of installation
+ *                         (supports up to 3 decimal places).
+ * @param service          The unique identifier of the utility service (e.g., Cold Water, Heating).
+ * @param accountNumber    The utility account number the meter belongs to.
+ */
 public record MeterDto(
-        @Null(message = "Индитификатор записи не должен быть указан")
+        @Null(message = "Идентификатор записи не должен быть указан")
         Long id,
 
         @NotBlank(message = "Не указан номер ИПУ")
@@ -23,10 +41,10 @@ public record MeterDto(
         @NotNull(message = "Не указано текущее показание ИПУ")
         @Pattern(regexp = "^\\d+([.]\\d{1,3})?$",
                 message = "Текущее показание имеет неверный формат," +
-                        " десятичная часть числа должна иметь не более трех знаков и отделятся точкой")
+                        " десятичная часть числа должна иметь не более трех знаков и отделяться точкой")
         String initialValue,
 
-        @NotNull(message = "Не указан индитификатор услуги")
+        @NotNull(message = "Не указан идентификатор услуги")
         Long service,
 
         @NotNull(message = "Не указан номер лицевого счета")@Pattern(regexp = "\\d{4}-\\d{3}-\\d",

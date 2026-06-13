@@ -4,6 +4,7 @@ import com.vodokanal.accounting.dto.ErrorResponseDto;
 import com.vodokanal.accounting.exception.DataAlreadyExistsException;
 import com.vodokanal.accounting.exception.DataNotFoundException;
 import org.hibernate.exception.ConstraintViolationException;
+
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,13 +14,12 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ControllerAdvice
 public class ExceptionHandler {
-    private static final Logger log = LoggerFactory.getLogger(HttpRequestHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(ExceptionHandler.class);
 
     @org.springframework.web.bind.annotation.ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleException(Exception e) {
@@ -50,8 +50,6 @@ public class ExceptionHandler {
 
         return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
     }
-
-
 
     @org.springframework.web.bind.annotation.ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponseDto> handleConstraintViolationException(ConstraintViolationException e) {

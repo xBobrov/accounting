@@ -12,7 +12,7 @@ public record BillRequestDto(
 
         @NotNull(message = "Не указан период требуемого счета")
         @Pattern(regexp = "^\\d{4}-(0[1-9]|1[0-2])$",
-                message = "Указаный период не соответствует формату: мм.гггг")
+                message = "Указанный период не соответствует формату: ГГГГ-ММ")
         String period
 ) {
 }
