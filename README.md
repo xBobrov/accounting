@@ -1,0 +1,3 @@
+## 📊 Схема базы данных
+
+![Схема базы данных](https://github.com/xBobrov/accounting/blob/master/assets/accountind_scheme.png)
