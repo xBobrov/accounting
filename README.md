@@ -126,3 +126,6 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
       TELEGRAM_BOT_TOKEN: "***" # Токен Telegram
 ```
+
+---
+*Проект создан в учебных целях для демонстрации навыков Trainee/Junior Java Developer.*
