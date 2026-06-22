@@ -17,22 +17,29 @@
           min-height: 100vh;
         }
     </style>
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 <div id="redoc-container">Загрузка спецификации API...</div>
 
-<script src="https://redoc.ly"></script>
 <script>
-    window.addEventListener('DOMContentLoaded', () => {
+    window.onload = function() {
+      if (typeof Redoc === 'undefined') {
+        document.getElementById('redoc-container').innerHTML =
+          `<div style="color: #cf222e; padding: 20px; font-family: sans-serif; font-weight: bold;">
+            ❌ Ошибка: Не удалось загрузить библиотеку Redoc с внешнего сервера. Проверьте интернет-соединение.
+          </div>`;
+        return;
+      }
+
       fetch('./openapi.json')
         .then(response => {
-          if (!response.ok) throw new Error('Не удалось загрузить openapi.json (Статус: ' + response.status + ')');
+          if (!response.ok) throw new Error('Не удалось найти или загрузить файл openapi.json (Статус: ' + response.status + ')');
           return response.json();
         })
         .then(spec => {
           Redoc.init(spec, {
-            scrollYOffset: 0,
-            hideDownloadButton: false
+            scrollYOffset: 0
           }, document.getElementById('redoc-container'));
         })
         .catch(error => {
@@ -41,7 +48,7 @@
               ❌ Ошибка: ${error.message}
             </div>`;
         });
-    });
+    };
 </script>
 </body>
 </html>
