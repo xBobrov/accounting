@@ -160,7 +160,7 @@ docker-compose up --build
 ### Вариант 2. Ручное восстановление дампа
 Если вы запускаете PostgreSQL локально (без Docker), вы можете накатить бэкап вручную через CLI:
 ```bash
-psql -U vodokanal_user -d vodokanal_db -f src/main/resources/test-db-backup.sql
+psql -U postgres -d vodokanal -f src/main/resources/db_backup.sql
 ```
 
 ---
