@@ -15,7 +15,7 @@ public class SchedulerService {
         this.databaseRepository = databaseRepository;
     }
 
-    @Scheduled(cron = "0 0 0 1 * ?") //"0 0 0 1 * ?" //"0 * * * * *"
+    @Scheduled(cron = "0 0 0 1 * ?")
     public void fulfillCalculation() {
         LocalDate readingDate = LocalDate.now().minusMonths(1);
         databaseRepository.fulfillCalculation(readingDate);
