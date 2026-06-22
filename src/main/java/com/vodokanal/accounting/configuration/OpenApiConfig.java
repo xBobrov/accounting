@@ -17,6 +17,6 @@ public class OpenApiConfig {
                         .description("REST API Сервиса учета АО «Водоканал»")
                         .contact(new Contact()
                                 .name("GitHub Repository")
-                                .url("https://github.com")));
+                                .url("https://github.com/xBobrov/accounting")));
     }
 }
