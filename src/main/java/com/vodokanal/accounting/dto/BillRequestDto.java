@@ -18,7 +18,7 @@ public record BillRequestDto(
         @NotNull(message = "Не указан период за который требуется квитанция")
         @Schema(
                 description = "Период за который требуется квитанция",
-                example = "2026-04-01"
+                example = "2026-04"
         )
         @Pattern(regexp = "^\\d{4}-(0[1-9]|1[0-2])$",
                 message = "Указанный период не соответствует формату: ГГГГ-ММ")
