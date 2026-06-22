@@ -95,6 +95,8 @@ services:
       POSTGRES_DB: vodokanal
     ports:
       - "5432:5432"
+    volumes:
+      - ./src/main/resources/db_backup.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d crud_db"]
       interval: 5s
@@ -141,6 +143,24 @@ services:
     environment:
       SPRING_RABBITMQ_HOST: rabbitmq
       TELEGRAM_BOT_TOKEN: "***" # Токен Telegram
+```
+
+## 💾 Запуск с тестовой базой данных
+
+В репозиторий включен дамп тестовой базы данных (`db_backup.sql`), содержащий демонстрационный набор данных.
+
+### Вариант 1. Автоматический запуск (рекомендуемый)
+Скрипт бэкапа автоматически монтируется в Docker-контейнер и разворачивается при первом запуске инфраструктуры:
+```bash
+# Очищаем старые тома (если они были) и поднимаем проект с демонстрационной БД
+docker-compose down -v
+docker-compose up --build
+```
+
+### Вариант 2. Ручное восстановление дампа
+Если вы запускаете PostgreSQL локально (без Docker), вы можете накатить бэкап вручную через CLI:
+```bash
+psql -U vodokanal_user -d vodokanal_db -f src/main/resources/test-db-backup.sql
 ```
 
 ---
